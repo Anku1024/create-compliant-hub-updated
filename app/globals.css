@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Dark theme based on screenshots */
+  --color-background: oklch(0.14 0.01 260);
+  --color-foreground: oklch(0.93 0 0);
+  --color-card: oklch(0.18 0.01 260);
+  --color-card-foreground: oklch(0.93 0 0);
+  --color-popover: oklch(0.20 0.01 260);
+  --color-popover-foreground: oklch(0.93 0 0);
+  --color-primary: oklch(0.55 0.15 220);
+  --color-primary-foreground: oklch(0.98 0 0);
+  --color-secondary: oklch(0.25 0.01 260);
+  --color-secondary-foreground: oklch(0.85 0 0);
+  --color-muted: oklch(0.22 0.01 260);
+  --color-muted-foreground: oklch(0.65 0 0);
+  --color-accent: oklch(0.25 0.01 260);
+  --color-accent-foreground: oklch(0.90 0 0);
+  --color-destructive: oklch(0.55 0.22 25);
+  --color-destructive-foreground: oklch(0.98 0 0);
+  --color-border: oklch(0.28 0.01 260);
+  --color-input: oklch(0.22 0.01 260);
+  --color-ring: oklch(0.55 0.15 220);
+  
+  /* Status colors */
+  --color-success: oklch(0.65 0.18 145);
+  --color-success-foreground: oklch(0.98 0 0);
+  --color-warning: oklch(0.75 0.16 85);
+  --color-warning-foreground: oklch(0.20 0 0);
+  --color-info: oklch(0.60 0.15 240);
+  --color-info-foreground: oklch(0.98 0 0);
+  --color-error: oklch(0.60 0.20 25);
+  --color-error-foreground: oklch(0.98 0 0);
+  
+  /* Chart colors */
+  --color-chart-blue: oklch(0.60 0.15 240);
+  --color-chart-red: oklch(0.65 0.18 15);
+  --color-chart-green: oklch(0.65 0.18 145);
+  --color-chart-yellow: oklch(0.80 0.14 90);
+  
+  --radius: 0.5rem;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: oklch(0.18 0.01 260);
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.35 0.01 260);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.45 0.01 260);
+}
