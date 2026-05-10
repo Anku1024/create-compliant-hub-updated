@@ -6,11 +6,6 @@ import { MoreHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
-  { name: "Users", href: "/users" },
-  { name: "News", href: "/news" },
-  { name: "My items", href: "/my-items" },
-  { name: "NACT", href: "/nact" },
-  { name: "TADT", href: "/tadt" },
   { name: "CAPs", href: "/" },
 ]
 

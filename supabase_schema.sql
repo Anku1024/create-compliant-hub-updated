@@ -8,7 +8,7 @@ create extension if not exists "uuid-ossp";
 
 -- ── USERS (extends Supabase auth.users) ──────────────────────
 create table public.profiles (
-  id          uuid references auth.users(id) on delete cascade primary key,
+  id          uuid primary key default uuid_generate_v4(),
   full_name   text not null,
   email       text not null,
   role        text not null default 'staff' check (role in ('admin', 'staff', 'readonly')),
@@ -42,24 +42,6 @@ create table public.caps (
   created_at                timestamptz default now(),
   updated_at                timestamptz default now()
 );
-
--- Computed columns via view (Supabase doesn't support generated from subqueries)
-create view public.caps_with_stats as
-select
-  c.*,
-  p.full_name as assigned_to_name,
-  (select count(*) from public.findings f where f.cap_id = c.id) as findings_count,
-  (select count(*) from public.actions a where a.cap_id = c.id) as actions_count,
-  (select count(*) from public.actions a where a.cap_id = c.id and a.status = 'Completed') as actions_completed,
-  (select count(*) from public.questions q where q.cap_id = c.id) as questions_total,
-  (select count(*) from public.questions q where q.cap_id = c.id and q.answered = true) as questions_answered,
-  (c.due_date < current_date and c.status not in ('Submitted', 'Closed')) as is_overdue,
-  case when c.due_date < current_date and c.status not in ('Submitted', 'Closed')
-    then (current_date - c.due_date)::int else null end as days_overdue,
-  (select count(*) from public.actions a 
-   where a.cap_id = c.id and a.due_date < current_date and a.status != 'Completed') as overdue_actions
-from public.caps c
-left join public.profiles p on p.id = c.assigned_to;
 
 -- ── FINDINGS ─────────────────────────────────────────────────
 create table public.findings (
@@ -115,6 +97,25 @@ select
   case when a.due_date < current_date and a.status != 'Completed'
     then (current_date - a.due_date)::int else null end as days_overdue
 from public.actions a;
+
+-- Computed columns via view (Supabase doesn't support generated from subqueries)
+-- Defined here (after findings/questions/actions) because it references them.
+create view public.caps_with_stats as
+select
+  c.*,
+  p.full_name as assigned_to_name,
+  (select count(*) from public.findings f where f.cap_id = c.id) as findings_count,
+  (select count(*) from public.actions a where a.cap_id = c.id) as actions_count,
+  (select count(*) from public.actions a where a.cap_id = c.id and a.status = 'Completed') as actions_completed,
+  (select count(*) from public.questions q where q.cap_id = c.id) as questions_total,
+  (select count(*) from public.questions q where q.cap_id = c.id and q.answered = true) as questions_answered,
+  (c.due_date < current_date and c.status not in ('Submitted', 'Closed')) as is_overdue,
+  case when c.due_date < current_date and c.status not in ('Submitted', 'Closed')
+    then (current_date - c.due_date)::int else null end as days_overdue,
+  (select count(*) from public.actions a
+   where a.cap_id = c.id and a.due_date < current_date and a.status != 'Completed') as overdue_actions
+from public.caps c
+left join public.profiles p on p.id = c.assigned_to;
 
 -- ── DOCUMENTS ────────────────────────────────────────────────
 create table public.documents (
@@ -199,15 +200,18 @@ alter table public.email_threads  enable row level security;
 alter table public.notes          enable row level security;
 alter table public.audit_log      enable row level security;
 
--- Allow authenticated users to read all records (adjust per role in production)
-create policy "Auth users can read caps"      on public.caps           for select using (auth.role() = 'authenticated');
-create policy "Auth users can read findings"  on public.findings       for select using (auth.role() = 'authenticated');
-create policy "Auth users can read questions" on public.questions      for select using (auth.role() = 'authenticated');
-create policy "Auth users can read actions"   on public.actions        for select using (auth.role() = 'authenticated');
-create policy "Auth users can read documents" on public.documents      for select using (auth.role() = 'authenticated');
-create policy "Auth users can read emails"    on public.email_threads  for select using (auth.role() = 'authenticated');
-create policy "Auth users can read notes"     on public.notes          for select using (auth.role() = 'authenticated');
-create policy "Auth users can read profiles"  on public.profiles       for select using (auth.role() = 'authenticated');
+-- Grant table-level privileges to anon/authenticated (RLS still applies)
+grant select on all tables in schema public to anon, authenticated;
+
+-- Demo: allow public (anon + authenticated) read access. Tighten for production.
+create policy "Public can read caps"      on public.caps           for select using (true);
+create policy "Public can read findings"  on public.findings       for select using (true);
+create policy "Public can read questions" on public.questions      for select using (true);
+create policy "Public can read actions"   on public.actions        for select using (true);
+create policy "Public can read documents" on public.documents      for select using (true);
+create policy "Public can read emails"    on public.email_threads  for select using (true);
+create policy "Public can read notes"     on public.notes          for select using (true);
+create policy "Public can read profiles"  on public.profiles       for select using (true);
 
 -- Write policies (admin or assigned user)
 create policy "Admin can insert caps" on public.caps for insert with check (auth.role() = 'authenticated');
